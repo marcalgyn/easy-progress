@@ -1,0 +1,115 @@
+@layout('layouts/app')
+
+@section('content')
+ <div class="columns">
+  <div class="column is-three-fifths is-offset-one-fifth">
+    <div class="box">
+      <form action="/cfops" method="post">
+        {{ csrfField() }}
+        <input type="hidden" name="id" value={{ objCfop.id }}>
+
+        <div class="card has-background-light">
+          <header class="card-header has-background-link">
+            <p class="title is-4 p-3 has-text-white">
+              Cadastro de CFOP
+            </p>
+          </header>
+          <div class="card-content">
+            <div class="field">
+              <label class="label">Código</label>
+              <div class="control is-expanded">
+                <input
+                  type="number"
+                  name="codigo"
+                  class="input {{ flashMessages.has('errors.codigo') ? 'is-danger' : '' }}" placeholder="Informe o Código CFOP"
+                  value={{ objCfop.codigo }}
+                  min="1000"
+                  max="9999"
+                >
+              </div>
+            </div>
+            <div class="field is-grouped">
+              <div class="control">
+                <button type="submit" class="button is-link">
+                  <span class="icon is-small">
+                    <i class="fas fa-check"></i>
+                  </span>
+                  <span>Salvar</span>
+                </button>
+              </div>
+              <div class="control">
+                <button type="reset" class="button is-warning">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        @if(flashMessages.has('errors.codigo'))
+          <p class="help is-danger">
+            {{ flashMessages.get('errors.codigo') }}
+          </p>
+        @endif
+      </form>
+      @if(flashMessages.has('notification'))
+        <div class="notification is-success is-light">
+          <button class="delete"></button>
+          {{ flashMessages.get('notification') }}
+        </div>
+      @endif
+
+      <div class="box">
+        <table class="table is-fullwidth is-striped is-hoverable">
+          <thead>
+            <tr>
+              <th class="has-text-centered">
+                Código
+              </th>
+              <th class="has-text-centered">
+                Ações
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @each(cfop in cfops)
+            <tr>
+              <td class="has-text-centered">
+                  {{ cfop.codigo }}
+              </td>
+              <td class="has-text-centered">
+                <form action="{{ `/cfops/${cfop.id}?_method=DELETE` }}" method="post">
+                  {{ csrfField() }}
+
+                  <button
+                  type="button"
+                  class="button is-small is-primary"
+                  onclick="window.location.href='{{ `/cfops/${cfop.id}` }}'"
+                  >
+                  <span class="icon is-small">
+                    <i class="fas fa-edit"></i>
+                  </span>
+                    <span>Editar</span>
+                  </button>
+                  <button type="submit" class="button is-small is-danger">
+                    <span class="icon is-small">
+                    <i class="fas fa-trash"></i>
+                  </span>
+                    <span>Excluir</span>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            @else
+              <tr>
+                <td colspan="2" class="has-text-centered">Nenhum CFOP Cadastrado</td>
+              </tr>
+            @endeach
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+ </div>
+@endsection

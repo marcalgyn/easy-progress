@@ -1,0 +1,186 @@
+@layout('layouts/app')
+
+@section('content')
+  <div class="columns">
+    <div class="column is-full">
+      <div class="box">
+        <form action="/notasFiscais/findBy" method="post">
+          {{ csrfField() }}
+
+          <div class="card has-background-light">
+            <header class="card-header has-background-link">
+              <p class="title is-4 p-3 has-text-white">
+                Notas Fiscais
+              </p>
+            </header>
+            <div class="card-content">
+              <div class="field-body">
+                <div class="field">
+                  <label class="label">CNPJ Emitente</label>
+                  <div class="control is-expanded">
+                    <input
+                      id="cnpj"
+                      type="text"
+                      name="cnpjEmitente"
+                      class="input"
+                      placeholder="Buscar pelo CNPJ do Emitente"
+                      value="{{ cnpjEmitente }}"
+                      required
+                    >
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">Nota Fiscal</label>
+                  <div class="control is-expanded">
+                    <input
+                      type="text"
+                      name="nf"
+                      class="input"
+                      placeholder="Buscar pelo Número da NF"
+                    >
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">Data Emissão NF - Início</label>
+                  <div class="control is-expanded">
+                    <input
+                      type="date"
+                      name="dataEmissaoInicial"
+                      class="input"
+                      placeholder="Digite a Data de Emissão Inicial"
+                    >
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">Data Emissão NF - Final</label>
+                  <div class="control is-expanded">
+                    <input
+                      type="date"
+                      name="dataEmissaoFinal"
+                      class="input"
+                      placeholder="Digite a Data de Emissão Final"
+                    >
+                  </div>
+                </div>
+              </div>
+              <hr>
+              <div class="field is-grouped">
+                <div class="control">
+                  <button type="submit" class="button is-link">
+                    <span class="icon is-small">
+                      <i class="fas fa-check"></i>
+                    </span>
+                    <span>Buscar</span>
+                  </button>
+                </div>
+                <div class="control">
+                  <button type="reset" class="button is-warning">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </form>
+        @if(flashMessages.has('notification'))
+          <div class="notification is-success is-light">
+            <button class="delete"></button>
+            {{ flashMessages.get('notification') }}
+          </div>
+        @endif
+
+        <div class="box">
+          <table class="table is-fullwidth is-striped is-hoverable">
+            <thead>
+              <tr>
+                <th>
+                  CNPJ Emitente
+                </th>
+                <th>
+                  Nome Emitente
+                </th>
+                <th  class="has-text-centered">
+                  Número NF
+                </th>
+                <th class="has-text-centered">
+                  Data Emissão
+                </th>
+                <th class="has-text-right">
+                  Valor Total
+                </th>
+                {{--  <th class="has-text-centered">
+                  Ações
+                </th>  --}}
+              </tr>
+            </thead>
+            <tbody>
+              @each(notaFiscal in notasFiscais.rows)
+              <tr>
+                <td>
+                    {{{ formatCnpj(notaFiscal.cnpjEmitente) }}}
+                </td>
+                <td>
+                    {{ notaFiscal.nomeEmitente }}
+                </td>
+                <td  class="has-text-centered">
+                    {{ notaFiscal.nf }}
+                </td>
+                <td class="has-text-centered">
+                    {{{ formatDate(notaFiscal.dataEmissao) }}}
+                </td>
+                <td class="has-text-right">
+                    {{{ formatCurrency(notaFiscal.valorTotal) }}}
+                </td>
+                {{--  <td class="has-text-centered">
+                  <form action="{{ `/notasFiscais/${notaFiscal.id}?_method=POST` }}" method="post">
+                    {{ csrfField() }}
+
+                    <button
+                    type="button"
+                    class="button is-small is-primary"
+                    onclick="window.location.href='{{ `/notasFiscais/${notaFiscal.id}` }}'"
+                    >
+                    <span class="icon is-small">
+                      <i class="fas fa-edit"></i>
+                    </span>
+                    <span>Detalhes</span>
+                    </button>
+                  </form>
+                </td>  --}}
+              </tr>
+              @else
+                <tr>
+                  <td colspan="5" class="has-text-centered">Nenhum Registro Encontrado com os Dados Informados</td>
+                </tr>
+              @endeach
+            </tbody>
+          </table>
+        </div>
+        @if(notasFiscais.hasPages)
+          <div class="box">
+            <nav class="pagination" role="navigation" aria-label="pagination">
+              <a class="pagination-previous" {{ notasFiscais.currentPage === 1 && 'disabled' }}
+                href="{{ notasFiscais.url }}?page={{ notasFiscais.currentPage - 1 }}">Anterior</a>
+              <a class="pagination-next" {{ !notasFiscais.hasMorePages && 'disabled' }}
+                href="{{ notasFiscais.url }}?page={{ notasFiscais.currentPage + 1 }}">Próxima</a>
+              <ul class="pagination-list">
+                @each(nFiscal in notasFiscais.getUrlsForRange(1, notasFiscais.lastPage))
+                  <li>
+                    <a
+                      class="pagination-link
+                      {{ notasFiscais.currentPage === nFiscal.page && 'is-current' }}"
+                      href="{{ nFiscal.url }}"
+                    >
+                      {{ nFiscal.page }}
+                    </a>
+                  </li>
+                @endeach
+              </ul>
+            </nav>
+          </div>
+        @endif
+      </div>
+    </div>
+  </div>
+@endsection
