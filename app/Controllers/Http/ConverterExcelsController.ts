@@ -17,16 +17,17 @@ export default class ConverterExcelsController {
 
   public async convert({ request, response }: HttpContextContract) {
 
-    const cnpjEmitente = this.onlyNumbers(request.input('cnpjEmitente'))
+    const cnpjDestinatario = this.onlyNumbers(request.input('cnpjDestinatario'))
     const dataEmissaoInicial = request.input('dataEmissaoInicial')
     const dataEmissaoFinal = request.input('dataEmissaoFinal')
+    console.log('cnpj', cnpjDestinatario);
 
     let notasFiscaisId: any
-    if (cnpjEmitente !== null && dataEmissaoInicial !== null && dataEmissaoFinal !== null) {
+    if (cnpjDestinatario !== null && dataEmissaoInicial !== null && dataEmissaoFinal !== null) {
       notasFiscaisId = await NotaFiscal
         .query()
         .select('id')
-        .where('cnpjDestinatario', cnpjEmitente)
+        .where('cnpj_destinatario', cnpjDestinatario)
         .whereBetween('dataEmissao', [dataEmissaoInicial, dataEmissaoFinal])
         .orderBy('id')
     }
@@ -37,7 +38,7 @@ export default class ConverterExcelsController {
       .query()
       .select(
         'nf', 'descricao', 'cfop', 'ncm', 'cst', 'percentual', 'quantidade',
-        'valor_unitario', 'valor_bruto', 'ipi', 'valor_desconto',
+        'valor_unitario', 'valor_bruto', 'ipi', 'valor_desconto', 'valor_frete',
         'despesas_acessorias', 'valor_icms', 'aliquota_icms', 'sub_total', 'valor_imposto'
       )
       .whereIn('notaFiscalId', jsonIds)
@@ -45,19 +46,36 @@ export default class ConverterExcelsController {
     const itens = itensNF.map((item: { serialize: () => any }) => item.serialize())
 
     let fs = require('fs')
-    const json2xls = require('json2xls')
 
-    const xls = json2xls(itens)
+    const { jsonToXlsx } = require('json-and-xlsx')
+
+    console.log(itens)
+
+    const xls = jsonToXlsx.readAndGetBuffer(itens)
 
     let nomeArquivo = 'Relatorio_' + moment().format('DDMMYYYYHHmmss') + '.xls'
 
     const filePath = `downloads/${nomeArquivo}`
 
-    fs.writeFileSync(Application.tmpPath(filePath), xls, 'binary')
+    fs.writeFileSync(Application.tmpPath(filePath), xls)
 
     const fileExcel = Application.tmpPath(filePath)
 
     response.attachment(fileExcel, nomeArquivo)
+
+    // const json2xls = require('json2xls')
+
+    // const xls = json2xls(itens)
+
+    // let nomeArquivo = 'Relatorio_' + moment().format('DDMMYYYYHHmmss') + '.xls'
+
+    // const filePath = `downloads/${nomeArquivo}`
+
+    // fs.writeFileSync(Application.tmpPath(filePath), xls, 'binary')
+
+    // const fileExcel = Application.tmpPath(filePath)
+
+    // response.attachment(fileExcel, nomeArquivo)
 
   }
 

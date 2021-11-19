@@ -27,6 +27,7 @@
     "@adonisjs/shield": "^7.0.5",
     "@adonisjs/view": "^6.0.0",
     "@fortawesome/fontawesome-free": "^5.15.3",
+    "json-and-xlsx": "^2.1.2",
     "json2xls": "^0.1.2",
     "luxon": "^2.0.1",
     "moment": "^2.29.1",

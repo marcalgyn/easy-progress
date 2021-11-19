@@ -1,4 +1,5 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import ItensNotaFiscal from 'App/Models/ItensNotaFiscal'
 import NotaFiscal from 'App/Models/NotaFiscal'
 
 export default class NotaFiscalsController {
@@ -61,6 +62,36 @@ export default class NotaFiscalsController {
     notasFiscais.baseUrl('/notasFiscais')
 
     return view.render('notaFiscal', { notasFiscais })
+  }
+
+  public async delete({ response, session, params }: HttpContextContract) {
+    const nf = await NotaFiscal.findOrFail(params.id)
+    
+     await ItensNotaFiscal
+      .query()
+      .where('notaFiscalId', params.id)
+      .delete()
+
+    await nf.delete()
+
+    session.flash('notification', 'Nota Fiscal excluída com sucesso!')
+
+    return response.redirect('back')
+  }
+
+  public async deleteAll({ response, session }: HttpContextContract) {
+ 
+    await ItensNotaFiscal
+      .query()  
+      .delete()
+    
+    await NotaFiscal
+    .query()
+    .delete()
+
+    session.flash('notification', 'Todos os Registros excluído com sucesso!')
+
+    return response.redirect('back')
   }
 
 }

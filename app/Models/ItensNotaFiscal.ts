@@ -52,6 +52,9 @@ export default class ItensNotaFiscal extends BaseModel {
   public aliquotaIcms: number
 
   @column()
+  public valorFrete: number
+
+  @column()
   public subTotal: number
 
   @column()

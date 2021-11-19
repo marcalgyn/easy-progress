@@ -17,7 +17,7 @@
               <div class="field">
                 <label class="label">Empresa</label>
                 <div class="select is-fullwidth">
-                  <select name="cnpjEmitente" required>
+                  <select name="cnpjDestinatario" required>
                     <option value="">Selecione uma Empresa para gerar os arquivos dela</option>
                     @each(empresa in empresas)
                       <option value="{{ empresa.cnpj }}">{{ empresa.razaoSocial }}</option>

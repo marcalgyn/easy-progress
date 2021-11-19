@@ -2,7 +2,10 @@
 
 @section('content')
 <div class="columns">
-  <div class="column is-4 is-offset-4">
+  <div class="column is-4 is-offset-4" >
+  
+    <img src="./logo.png" alt="" />
+
     <div class="box">
       <h2 class="title has-text-centered">Acesso ao Sistema</h2>
 
@@ -13,6 +16,7 @@
       @endif
 
       <form action="/login" method="post">
+
         {{ csrfField() }}
 
         <div class="field">
@@ -45,6 +49,10 @@
         </div>
       </form>
     </div>
+      <a href="https://www.instagram.com/silvio.marcal" target="_blank">
+        
+        <h6><small class="text-muted"><img border="0" src="/by.png" /></small></h6>
+      </a>
   </div>
 </div>
 @endsection

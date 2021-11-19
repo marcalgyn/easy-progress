@@ -35,6 +35,8 @@ Route.group(() => {
 Route.group(() => {
   Route.get('/', 'NotaFiscalsController.index')
   Route.post('/findBy', 'NotaFiscalsController.findBy')
+  Route.post('/deleteAll', 'NotaFiscalsController.deleteAll')
+  
 }).prefix('/notasFiscais').middleware('auth')
 
 Route.get('/register', 'AuthController.showRegister').middleware('guest')

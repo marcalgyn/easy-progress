@@ -17,6 +17,7 @@ export default class ProcessosController {
     const filesXml = request.files('resume')
 
     const cnpjEmpresa = this.onlyNumbers(request.input('cnpjEmpresa'))
+    
 
     const majoracao = request.input('majoracao')
     const aliquotaMajoracao = request.input('aliquota')
@@ -59,13 +60,15 @@ export default class ProcessosController {
         modelo: json.nfeProc.NFe.infNFe.ide.mod._text,
         serie: json.nfeProc.NFe.infNFe.ide.serie._text,
         dataEmissao: json.nfeProc.NFe.infNFe.ide.dhEmi._text,
-        cnpjEmitente: json.nfeProc.NFe.infNFe.emit.CNPJ !== undefined ? json.nfeProc.NFe.infNFe.emit.CNPJ._text : json.nfeProc.NFe.infNFe.emit.CPF._text,
+        cnpjEmitente: json.nfeProc.NFe.infNFe.emit.CNPJ !== undefined ? ('00000000000000' + json.nfeProc.NFe.infNFe.emit.CNPJ._text).slice(-14) : ('00000000000' + json.nfeProc.NFe.infNFe.emit.CPF._text).slice(-11),
         nomeEmitente: json.nfeProc.NFe.infNFe.emit.xNome._text,
-        cnpjDestinatario: json.nfeProc.NFe.infNFe.dest.CNPJ._text,
+        cnpjDestinatario: json.nfeProc.NFe.infNFe.dest.CNPJ !== undefined ? ('00000000000000' + json.nfeProc.NFe.infNFe.dest.CNPJ._text.toString()).slice(-14) : ('00000000000' + json.nfeProc.NFe.infNFe.dest.CPF._text.toString()).slice(-11),
         nomeCliente: json.nfeProc.NFe.infNFe.dest.xNome._text,
         valorTotal: json.nfeProc.NFe.infNFe.total.ICMSTot.vNF._text,
       }
-
+      console.log("CNPJ da Empresa Cadastrado: ", cnpjEmpresa)
+      console.log("Cnpj Capturado no XML da Empresa: ", notaFiscalObj.cnpjDestinatario)
+      
       if (cnpjEmpresa == notaFiscalObj.cnpjDestinatario) {
 
         try {
@@ -101,7 +104,22 @@ export default class ProcessosController {
                 if (majoracao === 'true') {
                   itensNotaFiscalObj.percentual = parseFloat(aliquotaMajoracao)
                 } else {
-                  const ncm = ncms.find((value) => value.codigo === element.prod.NCM._text)
+
+                  let ncmXml = element.prod.NCM._text.toString()
+                  let ncm: any
+
+                  for (let index = 0; index < ncms.length; index++) {
+                    const element = ncms[index];
+
+                    let ncmStr = element.codigo.toString()
+                    let tam = ncmStr.length
+                    let ncmXmlAux = ncmXml.substring(0, tam)
+                    if (ncmStr === ncmXmlAux) {
+                      ncm = element
+                      break
+                    }
+                  }
+
                   if (ncm !== undefined) {
                     itensNotaFiscalObj.percentual = ncm.aliquota
                   } else {
@@ -115,20 +133,21 @@ export default class ProcessosController {
                 itensNotaFiscalObj.ipi = (element.imposto.ICMS.IPI !== undefined) ? element.imposto.ICMS.IPI.IPITrib.vIPI._text : 0.0
                 itensNotaFiscalObj.valorDesconto = (element.prod.vDesc !== undefined) ? element.prod.vDesc._text : 0.0
                 itensNotaFiscalObj.despesasAcessorias = (element.prod.vOutro !== undefined) ? element.prod.vOutro._text : 0.0
+                itensNotaFiscalObj.valorFrete = (element.prod.vFrete !== undefined) ? element.prod.vFrete._text : 0.0
 
                 if (element.imposto.ICMS.ICMSSN101 !== undefined) {
-                  itensNotaFiscalObj.aliquotaIcms = 18.00 //informando valor fixo conforme orientação Andre
-                  itensNotaFiscalObj.valorIcms = itensNotaFiscalObj.valorBruto * 0.03 //credito conforme orientação Andre
+                  itensNotaFiscalObj.aliquotaIcms = 18.0
+                  itensNotaFiscalObj.valorIcms = itensNotaFiscalObj.valorBruto * 0.03
                   itensNotaFiscalObj.cst = 101
 
                 } else if (element.imposto.ICMS.ICMSSN102 !== undefined) {
-                  itensNotaFiscalObj.aliquotaIcms = 18.00 //informando valor fixo conforme orientação Andre
-                  itensNotaFiscalObj.valorIcms = itensNotaFiscalObj.valorBruto * 0.03 //credito conforme orientação Andre
+                  itensNotaFiscalObj.aliquotaIcms = 18.0
+                  itensNotaFiscalObj.valorIcms = itensNotaFiscalObj.valorBruto * 0.03
                   itensNotaFiscalObj.cst = 102
 
                 } else if (element.imposto.ICMS.ICMSSN103 !== undefined) {
-                  itensNotaFiscalObj.aliquotaIcms = 18.00 //informando valor fixo conforme orientação Andre
-                  itensNotaFiscalObj.valorIcms = itensNotaFiscalObj.valorBruto * 0.03 //credito conforme orientação Andre
+                  itensNotaFiscalObj.aliquotaIcms = 18.0
+                  itensNotaFiscalObj.valorIcms = itensNotaFiscalObj.valorBruto * 0.03
                   itensNotaFiscalObj.cst = 103
 
                 } else if (element.imposto.ICMS.ICMSSN201 !== undefined) {
@@ -228,11 +247,11 @@ export default class ProcessosController {
                 }
                 contador++
 
-                const vlrSubTotal = (itensNotaFiscalObj.valorBruto + itensNotaFiscalObj.ipi) -
-                  (itensNotaFiscalObj.valorDesconto + itensNotaFiscalObj.despesasAcessorias)
+                const vlrSubTotal = (itensNotaFiscalObj.valorBruto + itensNotaFiscalObj.ipi + itensNotaFiscalObj.valorFrete + itensNotaFiscalObj.despesasAcessorias) -
+                  (itensNotaFiscalObj.valorDesconto)
                 itensNotaFiscalObj.subTotal = vlrSubTotal
 
-                const vlrImposto = ((vlrSubTotal * (itensNotaFiscalObj.percentual/100)+vlrSubTotal) * (itensNotaFiscalObj.aliquotaIcms/100)) - itensNotaFiscalObj.valorIcms
+                const vlrImposto = ((vlrSubTotal * (itensNotaFiscalObj.percentual / 100) + vlrSubTotal) * (itensNotaFiscalObj.aliquotaIcms / 100)) - itensNotaFiscalObj.valorIcms
                 itensNotaFiscalObj.valorImposto = vlrImposto < 0 ? 0 : vlrImposto
 
                 itensNotaFiscalObj.notaFiscalId = notaFiscal.id
@@ -266,7 +285,22 @@ export default class ProcessosController {
               if (majoracao === 'true') {
                 itensNotaFiscalObj.percentual = parseFloat(aliquotaMajoracao)
               } else {
-                const ncm = ncms.find((value) => value.codigo === element.prod.NCM._text)
+                console.log('Elementos itens da nota')
+                let ncmXml = element.prod.NCM._text.toString()
+                let ncm: any
+
+                for (let index = 0; index < ncms.length; index++) {
+                  const element = ncms[index];
+
+                  let ncmStr = element.codigo.toString()
+                  let tam = ncmStr.length
+                  let ncmXmlAux = ncmXml.substring(0, tam)
+                  if (ncmStr === ncmXmlAux) {
+                    ncm = element
+                    break
+                  }
+                }
+
                 if (ncm !== undefined) {
                   itensNotaFiscalObj.percentual = ncm.aliquota
                 } else {
@@ -282,20 +316,21 @@ export default class ProcessosController {
               itensNotaFiscalObj.ipi = (element.imposto.ICMS.IPI !== undefined) ? element.imposto.ICMS.IPI.IPITrib.vIPI._text : 0.0
               itensNotaFiscalObj.valorDesconto = (element.prod.vDesc !== undefined) ? element.prod.vDesc._text : 0.0
               itensNotaFiscalObj.despesasAcessorias = (element.prod.vOutro !== undefined) ? element.prod.vOutro._text : 0.0
+              itensNotaFiscalObj.valorFrete = (element.prod.vFrete !== undefined) ? element.prod.vFrete._text : 0.0
 
               if (element.imposto.ICMS.ICMSSN101 !== undefined) {
-                itensNotaFiscalObj.aliquotaIcms = 0.0
-                itensNotaFiscalObj.valorIcms = 0.0
+                itensNotaFiscalObj.aliquotaIcms = 18.0
+                itensNotaFiscalObj.valorIcms = itensNotaFiscalObj.valorBruto * 0.03
                 itensNotaFiscalObj.cst = 101
 
               } else if (element.imposto.ICMS.ICMSSN102 !== undefined) {
-                itensNotaFiscalObj.aliquotaIcms = 0.0
-                itensNotaFiscalObj.valorIcms = 0.0
+                itensNotaFiscalObj.aliquotaIcms = 18.0
+                itensNotaFiscalObj.valorIcms = itensNotaFiscalObj.valorBruto * 0.03
                 itensNotaFiscalObj.cst = 102
 
               } else if (element.imposto.ICMS.ICMSSN103 !== undefined) {
-                itensNotaFiscalObj.aliquotaIcms = 0.0
-                itensNotaFiscalObj.valorIcms = 0.0
+                itensNotaFiscalObj.aliquotaIcms = 18.0
+                itensNotaFiscalObj.valorIcms = itensNotaFiscalObj.valorBruto * 0.03
                 itensNotaFiscalObj.cst = 103
 
               } else if (element.imposto.ICMS.ICMSSN201 !== undefined) {
@@ -394,11 +429,12 @@ export default class ProcessosController {
                 console.log('CST: ', '')
               }
 
-              const vlrSubTotal = (itensNotaFiscalObj.valorBruto + itensNotaFiscalObj.ipi) -
-                (itensNotaFiscalObj.valorDesconto + itensNotaFiscalObj.despesasAcessorias)
+              
+              const vlrSubTotal = (itensNotaFiscalObj.valorBruto + itensNotaFiscalObj.ipi + itensNotaFiscalObj.valorFrete + itensNotaFiscalObj.despesasAcessorias) -
+                (itensNotaFiscalObj.valorDesconto)
               itensNotaFiscalObj.subTotal = vlrSubTotal
 
-              const vlrImposto = (vlrSubTotal * itensNotaFiscalObj.percentual * itensNotaFiscalObj.aliquotaIcms) - itensNotaFiscalObj.valorIcms
+              const vlrImposto = ((vlrSubTotal * (itensNotaFiscalObj.percentual / 100) + vlrSubTotal) * (itensNotaFiscalObj.aliquotaIcms / 100)) - itensNotaFiscalObj.valorIcms
               itensNotaFiscalObj.valorImposto = vlrImposto < 0 ? 0 : vlrImposto
 
               itensNotaFiscalObj.notaFiscalId = notaFiscal.id

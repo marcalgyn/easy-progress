@@ -26,6 +26,7 @@
                       placeholder="Buscar pelo CNPJ do Emitente"
                       value="{{ cnpjEmitente }}"
                       required
+                      
                     >
                   </div>
                 </div>
@@ -79,10 +80,25 @@
                   </button>
                 </div>
               </div>
+              <hr>
+              
+             
 
             </div>
           </div>
         </form>
+        <div class="field is-grouped">
+         <form action="/notasFiscais/deleteAll/" method="post">
+                   {{ csrfField() }}
+                    <button type="submit" class="button is-small is-danger">
+                    <span class="icon is-small">
+                      <i class="fas fa-trash"></i>
+                    </span>
+                    <span>Excluir Tudo</span>
+                    </button>
+          </form>
+          </div>
+
         @if(flashMessages.has('notification'))
           <div class="notification is-success is-light">
             <button class="delete"></button>
@@ -109,9 +125,9 @@
                 <th class="has-text-right">
                   Valor Total
                 </th>
-                {{--  <th class="has-text-centered">
+                <th class="has-text-centered">
                   Ações
-                </th>  --}}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -132,22 +148,18 @@
                 <td class="has-text-right">
                     {{{ formatCurrency(notaFiscal.valorTotal) }}}
                 </td>
-                {{--  <td class="has-text-centered">
-                  <form action="{{ `/notasFiscais/${notaFiscal.id}?_method=POST` }}" method="post">
+                <td class="has-text-centered">
+                  <form action="{{ `/notasFiscais/${notaFiscal.id}?_method=DELETE` }}" method="post">
                     {{ csrfField() }}
 
-                    <button
-                    type="button"
-                    class="button is-small is-primary"
-                    onclick="window.location.href='{{ `/notasFiscais/${notaFiscal.id}` }}'"
-                    >
+                    <button type="submit" class="button is-small is-danger">
                     <span class="icon is-small">
-                      <i class="fas fa-edit"></i>
+                      <i class="fas fa-trash"></i>
                     </span>
-                    <span>Detalhes</span>
+                    <span>Excluir</span>
                     </button>
                   </form>
-                </td>  --}}
+                </td>
               </tr>
               @else
                 <tr>

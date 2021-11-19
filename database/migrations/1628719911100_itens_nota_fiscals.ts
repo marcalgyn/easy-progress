@@ -24,6 +24,7 @@ export default class ItensNotaFiscals extends BaseSchema {
       table.decimal('despesas_acessorias', 12, 2)
       table.decimal('valor_icms', 12, 2)
       table.float('aliquota_icms')
+      table.decimal('valor_frete')
       table.decimal('sub_total', 12, 2)
       table.decimal('valor_imposto', 12, 2)
       table.timestamp('created_at', { useTz: true })
